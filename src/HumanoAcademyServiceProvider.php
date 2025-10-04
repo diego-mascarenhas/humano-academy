@@ -5,6 +5,8 @@ namespace Idoneo\HumanoAcademy;
 use Idoneo\HumanoAcademy\Models\SystemModule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -50,6 +52,27 @@ class HumanoAcademyServiceProvider extends PackageServiceProvider
 			}
 		} catch (\Throwable $e) {
 			Log::debug('HumanoAcademy: module registration skipped: '.$e->getMessage());
+		}
+
+		// Ensure permissions exist for menus and access
+		try {
+			if (Schema::hasTable('permissions') && class_exists(Permission::class)) {
+				// Run the permissions seeder
+				if (class_exists(\HumanoAcademy\Database\Seeders\AcademyPermissionsSeeder::class)) {
+					(new \HumanoAcademy\Database\Seeders\AcademyPermissionsSeeder())->run();
+				}
+
+				// Grant all academy permissions to admin role
+				$adminRole = class_exists(Role::class) ? Role::where('name', 'admin')->first() : null;
+				if ($adminRole) {
+					$academyPermissions = Permission::where('name', 'LIKE', 'academy.%')->pluck('name')->toArray();
+					if (!empty($academyPermissions)) {
+						$adminRole->givePermissionTo($academyPermissions);
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+			Log::debug('HumanoAcademy: permissions setup skipped: ' . $e->getMessage());
 		}
 	}
 }
