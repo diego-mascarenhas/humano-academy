@@ -32,8 +32,10 @@ class HumanoAcademyServiceProvider extends PackageServiceProvider
 						[
 							'name' => 'Academy',
 							'icon' => 'ti ti-school',
-							'description' => 'Learning content and courses',
+							'description' => 'Academy courses management module',
 							'is_core' => false,
+							'group' => 'content',
+							'order' => 2,
 							'status' => 1,
 						]
 					);
